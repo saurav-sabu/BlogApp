@@ -5,6 +5,8 @@ import models
 from schemas import Blog, ShowBlog, User, ShowUser
 from hashing import hash_password
 from database import get_db
+from repository import user
+
 
 router = APIRouter(
     prefix="/user",
@@ -13,20 +15,12 @@ router = APIRouter(
 
 @router.post("/",status_code=status.HTTP_201_CREATED)
 def create_user(request:User,db:Session = Depends(get_db)):
-    new_user = models.User(name=request.name,email=request.email,password=hash_password(request.password))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    return user.create_user(request,db)
 
 @router.get("/{id}",status_code=200,response_model=ShowUser)
 def get_user_by_id(id:int,db:Session=Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id==id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"user {id} not found")
-    return user
+    return user.get_user_by_id(id,db)
 
 @router.get("/",status_code=200,response_model=List[ShowUser])
 def get_all_users(db:Session=Depends(get_db)):
-    user = db.query(models.User).all()
-    return user
+    return user.get_all_users(db)
